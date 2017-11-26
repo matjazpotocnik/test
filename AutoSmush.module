@@ -61,43 +61,43 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 	 * Array of settings for image-optimizer
 	 * @var array
 	 */
-	protected $optimizeSettings = array();
+	protected $optimizeSettings = array(); //private?
 
 	/**
 	 * Array of all optimizers
 	 * @var array
 	 */
-	protected $optimizers = array();
+	protected $optimizers = array(); //private?
 
 	/**
 	 * Array of additional paths to look for optimizers executable
 	 * @var array
 	 */
-	protected $optimizersExtraPaths = array();
+	protected $optimizersExtraPaths = array(); //private?
 
 	/**
 	 * Array of allowed extensions for images
 	 * @var array
 	 */
-	protected $allowedExtensions = array();
+	protected $allowedExtensions = array(); //private?
 
 	/**
 	 * Array of error codes returned by reSmush.it web service
 	 * @var array
 	 */
-	protected $apiErrorCodes = array();
+	protected $apiErrorCodes = array(); //private?
 
 	/**
 	 * Indicator if image needs to be optimized
 	 * @var boolean
 	 */
-	protected $isOptimizeNeeded = false;
+	protected $isOptimizeNeeded = false; //private?
 
 	/**
 	 * Indicator if image was optimized on upload
 	 * @var boolean
 	 */
-	protected $isOptimizedOnUpload = false;
+	protected $isOptimizedOnUpload = false; //private?
 
 	/**
 	 * This module config data
@@ -109,7 +109,7 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 	 * PW FileLog object
 	 * @var array
 	 */
-	protected $log;
+	protected $log; //private?
 
 
 	/**
@@ -245,7 +245,8 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 
 		$fieldValue = $page->get($fieldName);
 		if(!$fieldValue || !$fieldValue instanceof Pagefiles) throw new WireException('Invalid field');
-		$field = $fieldValue; unset($fieldValue);
+		$field = $fieldValue;
+		unset($fieldValue);
 
 		// get filename from post, sanitize and validate
 		$filename = wire('sanitizer')->name($this->input->post->filename);
@@ -493,7 +494,7 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 			exit(0);
 		} else {
 			$status = $this->optimize($img, true, 'manual');
-			if(!is_null($status['error'])) {
+			if($status['error'] !== null) {
 				$msg = $this->_('Not optimized, check log!');
 				// errors are already logged by optimize method
 				echo $getVariations ? $err : $msg;
@@ -546,8 +547,8 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 			exit(0);
 		}
 
-		$processOriginals  = (isset($this->configData['optBulkAction']) && in_array('optimize_originals', $this->configData['optBulkAction']));
-		$processVariations = (isset($this->configData['optBulkAction']) && in_array('optimize_variations', $this->configData['optBulkAction']));
+		$processOriginals  = isset($this->configData['optBulkAction']) && in_array('optimize_originals', $this->configData['optBulkAction']);
+		$processVariations = isset($this->configData['optBulkAction']) && in_array('optimize_variations', $this->configData['optBulkAction']);
 
 		// get all fields of type FieldtypeImage or FieldtypeCroppableImage3
 		$selector = 'type=FieldtypeImage';
@@ -593,7 +594,7 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 		$a = array();
 		if($start < $numPagesWithImages) {
 			$a["counter"] =	sprintf($this->_('Processing page %1$d out of %2$d - {%3$d}%% complete'), // {} is placeholder, must be present
-											($start+1), $numPagesWithImages, (int) (($start) / $numPagesWithImages * 100));
+											$start+1, $numPagesWithImages, (int) ($start / $numPagesWithImages * 100));
 		} else {
 			$a["counter"] =	sprintf($this->_('All done - {100}%% complete'));
 		}
@@ -1018,9 +1019,6 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 			foreach ($searchPath as $path) {
 				// Silencing against https://bugs.php.net/69240
 				if(@is_dir($path)) $dirs[] = $path;
-				else {
-					if(basename($path) == $name && is_executable($path)) return $path;
-				}
 			}
 		} else {
 			$dirs = array_merge(
@@ -1145,9 +1143,6 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 		$allImages = array();
 		if(!$page->id) return $allImages;
 
-		$numImages = 0;
-		$numImageFields = 0;
-		
 		if(empty($fields)) $fields = $page->fields;
 
 		foreach($fields as $field) {
@@ -1161,19 +1156,15 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 					$images = $this->getImages($p, $p->fields, $level+1);
 					if(!count($images)) continue;
 					$allImages = array_merge($allImages, $images);
-					$numImages += count($images);
-					$numImageFields++;
 				}
 				continue;
 			}
 
 			if(!$field->type instanceof FieldtypeImage) continue;
-			$numImageFields++;
 			$images = $page->getUnformatted($field->name);
 			if(!count($images)) continue;
 
 			foreach($images as $image) {
-				$numImages++;
 				$key = $page->id . ',' . $image->basename;  // page_id,basename for repeater support
 				$allImages[$key] = $image;
 			}
