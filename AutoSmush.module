@@ -504,11 +504,11 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 
 		@clearstatcache(true, $img->filename);
 		$dest_size = @filesize($img->filename);
-		$percentNew = 100 - (int) ($dest_size / $src_size * 100);
 
 		if($getVariations) {
 			echo wireBytesStr($dest_size);
 		} else {
+			//$percentNew = 100 - (int) ($dest_size / $src_size * 100);
 			//printf($this->x_x('Optimized, reduced by %1$d%%'), $percentNew);
 			echo $this->_('Optimized, new size:') . ' ' . wireBytesStr($dest_size);
 		}
@@ -1201,7 +1201,7 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 
 			// optimize images in manual mode on clicking optimize button/link or on image variations modal
 			if($mode === 'optimize') $this->onclickOptimize(($input->get('var') == 1)); // &var=1 => process variation
-			
+
 			// add assets
 			$this->wire('modules')->get('JqueryMagnific');
 			$config->scripts->add($config->urls->siteModules . __CLASS__ . '/' . __CLASS__ . '.js');//?v=' . time());
@@ -1251,9 +1251,6 @@ class AutoSmush extends FieldtypeImage implements Module, ConfigurableModule {
 	public function ___install() {
 		$disabled = explode(', ', @ini_get('disable_functions'));
 		if(in_array('exec', $disabled)) $this->error('exec functions disabled, web server optimization tools will not work.');
-		if(@ini_get('safe_mode')) { 
-			$this->message('Safe mode is on, programms can only be run from ' . @ini_get('safe_mode_exec_dir') . '.');
-		}
 	}
 
 	/**
